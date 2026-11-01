@@ -1,0 +1,10 @@
+data/
+raw/
+tools/정답지.md
+.env
+시안.png
+W1_목업_w1-gam-test.zip
+.claude/
+__pycache__/
+*.pyc
+.vercel/
