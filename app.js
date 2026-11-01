@@ -5,6 +5,11 @@
  */
 
 const $ = (id) => document.getElementById(id);
+
+/* 밖에서 들어온 글자(주소창 · 촌평)를 HTML에 넣기 전에 특수문자를 바꿔 둔다 */
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => (
+  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+));
 const views = { home: $("view-home"), quiz: $("view-quiz"), result: $("view-result") };
 
 let INDEX = null;     // topics.json
@@ -78,11 +83,11 @@ async function boot() {
 
   const p = new URLSearchParams(location.search);
   if (p.has("s")) {
-    const g = p.get("g") || "";
+    const g = (p.get("g") || "").slice(0, 20);
     const t = INDEX.topics.find((x) => x.id === p.get("t"));
     $("shared-banner").innerHTML =
       `친구가 ${t ? `<b>${t.emoji} ${t.title}</b> 에서 ` : ""}` +
-      `<b>${Number(p.get("s"))}점 · ${g}</b>${josa(g || "점")} 받았습니다. 당신은요?`;
+      `<b>${Number(p.get("s"))}점 · ${esc(g)}</b>${josa(g || "점")} 받았습니다. 당신은요?`;
     $("shared-banner").hidden = false;
   }
 
@@ -274,8 +279,8 @@ async function askComment(total, grade) {
     clearTimeout(timer);
     const j = await r.json();
     if (!j || !j.comment) { el.hidden = true; return; }
-    el.innerHTML = `<span class="tag">한 줄 촌평</span><br>${j.comment}` +
-      (j.nickname ? `<br><span class="nick">${j.nickname}</span>` : "");
+    el.innerHTML = `<span class="tag">한 줄 촌평</span><br>${esc(j.comment)}` +
+      (j.nickname ? `<br><span class="nick">${esc(j.nickname)}</span>` : "");
   } catch {
     el.hidden = true;
   }

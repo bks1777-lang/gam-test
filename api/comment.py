@@ -30,6 +30,7 @@ MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
 ENDPOINT = ("https://generativelanguage.googleapis.com/v1beta/"
             "models/{model}:generateContent")
 TIMEOUT = 6
+DIRECTIONS = {"높게", "낮게", "비슷", "맞힘", "틀림"}
 
 PROMPT = """너는 공개 데이터로 만든 숫자 맞히기 퀴즈 '감 테스트'의 촌평 담당이다.
 
@@ -96,9 +97,11 @@ class handler(BaseHTTPRequestHandler):
         try:
             n = int(self.headers.get("Content-Length") or 0)
             req = json.loads(self.rfile.read(n) or b"{}")
-            got = _ask(int(req.get("score", 0)),
-                       str(req.get("grade", "")),
-                       [str(x) for x in req.get("directions", [])][:10],
+            # 밖에서 오는 값이라 범위 · 길이 · 허용 단어를 막아 둔다 (프롬프트 끼워 넣기 방지)
+            got = _ask(max(0, min(100, int(req.get("score", 0)))),
+                       str(req.get("grade", ""))[:20],
+                       [str(x) for x in req.get("directions", [])
+                        if str(x) in DIRECTIONS][:10],
                        str(req.get("topic", ""))[:40])
             self._send(got or {"comment": None})
         except Exception:
